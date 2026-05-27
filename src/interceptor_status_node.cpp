@@ -11,20 +11,12 @@
 class InterceptorStatusNode : public rclcpp::Node
 {
 public:
-  InterceptorStatusNode()
-  : Node("interceptor_status_node"), sequence_(0)
+  InterceptorStatusNode() : Node("interceptor_status_node"), sequence_(0)
   {
     publish_period_ms_ = this->declare_parameter<int>("publish_period_ms", 500);
     interceptor_id_ = this->declare_parameter<std::string>("interceptor_id", "interceptor_001");
-
-    publisher_ = this->create_publisher<std_msgs::msg::String>(
-      cuas_datalink::topics::INTERCEPTOR_STATUS,
-      cuas_datalink::BestEffortTelemetryQoS());
-
-    timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(publish_period_ms_),
-      std::bind(&InterceptorStatusNode::PublishStatus, this));
-
+    publisher_ = this->create_publisher<std_msgs::msg::String>(cuas_datalink::topics::INTERCEPTOR_STATUS,cuas_datalink::BestEffortTelemetryQoS());
+    timer_ = this->create_wall_timer(std::chrono::milliseconds(publish_period_ms_),std::bind(&InterceptorStatusNode::PublishStatus, this));
     RCLCPP_INFO(this->get_logger(), "interceptor_status_node started");
   }
 

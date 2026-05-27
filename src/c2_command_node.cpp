@@ -1,30 +1,20 @@
 #include <chrono>
 #include <memory>
 #include <string>
-
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
-
 #include "cuas_datalink/qos_profiles.hpp"
 #include "cuas_datalink/topic_names.hpp"
 
 class C2CommandNode : public rclcpp::Node
 {
 public:
-  C2CommandNode()
-  : Node("c2_command_node"), sequence_(0)
+  C2CommandNode() : Node("c2_command_node"), sequence_(0)
   {
     publish_period_ms_ = this->declare_parameter<int>("publish_period_ms", 1000);
     command_prefix_ = this->declare_parameter<std::string>("command_prefix", "INTERCEPT");
-
-    publisher_ = this->create_publisher<std_msgs::msg::String>(
-      cuas_datalink::topics::C2_COMMAND,
-      cuas_datalink::ReliableControlQoS());
-
-    timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(publish_period_ms_),
-      std::bind(&C2CommandNode::PublishCommand, this));
-
+    publisher_ = this->create_publisher<std_msgs::msg::String>(cuas_datalink::topics::C2_COMMAND,cuas_datalink::ReliableControlQoS());
+    timer_ = this->create_wall_timer(std::chrono::milliseconds(publish_period_ms_),std::bind(&C2CommandNode::PublishCommand, this));
     RCLCPP_INFO(this->get_logger(), "c2_command_node started");
   }
 

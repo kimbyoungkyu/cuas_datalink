@@ -11,20 +11,12 @@
 class HeartbeatNode : public rclcpp::Node
 {
 public:
-  HeartbeatNode()
-  : Node("heartbeat_node"), sequence_(0)
+  HeartbeatNode() : Node("heartbeat_node"), sequence_(0)
   {
     publish_period_ms_ = this->declare_parameter<int>("publish_period_ms", 1000);
     link_id_ = this->declare_parameter<std::string>("link_id", "cuas_datalink");
-
-    publisher_ = this->create_publisher<std_msgs::msg::String>(
-      cuas_datalink::topics::HEARTBEAT,
-      cuas_datalink::BestEffortTelemetryQoS());
-
-    timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(publish_period_ms_),
-      std::bind(&HeartbeatNode::PublishHeartbeat, this));
-
+    publisher_ = this->create_publisher<std_msgs::msg::String>(cuas_datalink::topics::HEARTBEAT,cuas_datalink::BestEffortTelemetryQoS());
+    timer_ = this->create_wall_timer(std::chrono::milliseconds(publish_period_ms_),std::bind(&HeartbeatNode::PublishHeartbeat, this));
     RCLCPP_INFO(this->get_logger(), "heartbeat_node started");
   }
 

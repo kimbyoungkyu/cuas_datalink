@@ -15,50 +15,25 @@
 class NatsBridgeNode : public rclcpp::Node
 {
 public:
-  NatsBridgeNode()
-  : Node("nats_bridge_node"), running_(false)
+  NatsBridgeNode() : Node("nats_bridge_node"), running_(false)
   {
     nats_url_ = this->declare_parameter<std::string>("nats_url", "nats://127.0.0.1:4222");
 
-    subject_c2_command_ = this->declare_parameter<std::string>(
-      "subject_c2_command", cuas_datalink::nats_subjects::C2_COMMAND);
-    subject_c2_status_ = this->declare_parameter<std::string>(
-      "subject_c2_status", cuas_datalink::nats_subjects::C2_STATUS);
-    subject_interceptor_command_ = this->declare_parameter<std::string>(
-      "subject_interceptor_command", cuas_datalink::nats_subjects::INTERCEPTOR_COMMAND);
-    subject_interceptor_status_ = this->declare_parameter<std::string>(
-      "subject_interceptor_status", cuas_datalink::nats_subjects::INTERCEPTOR_STATUS);
-    subject_heartbeat_ = this->declare_parameter<std::string>(
-      "subject_heartbeat", cuas_datalink::nats_subjects::HEARTBEAT);
+    subject_c2_command_ = this->declare_parameter<std::string>("subject_c2_command", cuas_datalink::nats_subjects::C2_COMMAND);
+    subject_c2_status_ = this->declare_parameter<std::string>("subject_c2_status", cuas_datalink::nats_subjects::C2_STATUS);
+    subject_interceptor_command_ = this->declare_parameter<std::string>("subject_interceptor_command", cuas_datalink::nats_subjects::INTERCEPTOR_COMMAND);
+    subject_interceptor_status_ = this->declare_parameter<std::string>("subject_interceptor_status", cuas_datalink::nats_subjects::INTERCEPTOR_STATUS);
+    subject_heartbeat_ = this->declare_parameter<std::string>("subject_heartbeat", cuas_datalink::nats_subjects::HEARTBEAT);
 
     ConnectNats();
 
-    c2_command_pub_ = this->create_publisher<std_msgs::msg::String>(
-      cuas_datalink::topics::C2_COMMAND,
-      cuas_datalink::ReliableControlQoS());
-
-    interceptor_status_pub_ = this->create_publisher<std_msgs::msg::String>(
-      cuas_datalink::topics::INTERCEPTOR_STATUS,
-      cuas_datalink::BestEffortTelemetryQoS());
-
-    interceptor_command_sub_ = this->create_subscription<std_msgs::msg::String>(
-      cuas_datalink::topics::INTERCEPTOR_COMMAND,
-      cuas_datalink::ReliableControlQoS(),
-      std::bind(&NatsBridgeNode::OnRosInterceptorCommand, this, std::placeholders::_1));
-
-    c2_status_sub_ = this->create_subscription<std_msgs::msg::String>(
-      cuas_datalink::topics::C2_STATUS,
-      cuas_datalink::BestEffortTelemetryQoS(),
-      std::bind(&NatsBridgeNode::OnRosC2Status, this, std::placeholders::_1));
-
-    heartbeat_sub_ = this->create_subscription<std_msgs::msg::String>(
-      cuas_datalink::topics::HEARTBEAT,
-      cuas_datalink::BestEffortTelemetryQoS(),
-      std::bind(&NatsBridgeNode::OnRosHeartbeat, this, std::placeholders::_1));
-
+    c2_command_pub_ = this->create_publisher<std_msgs::msg::String>(cuas_datalink::topics::C2_COMMAND,cuas_datalink::ReliableControlQoS());
+    interceptor_status_pub_ = this->create_publisher<std_msgs::msg::String>(cuas_datalink::topics::INTERCEPTOR_STATUS,cuas_datalink::BestEffortTelemetryQoS());
+    interceptor_command_sub_ = this->create_subscription<std_msgs::msg::String>(cuas_datalink::topics::INTERCEPTOR_COMMAND,cuas_datalink::ReliableControlQoS(),std::bind(&NatsBridgeNode::OnRosInterceptorCommand, this, std::placeholders::_1));
+    c2_status_sub_ = this->create_subscription<std_msgs::msg::String>(cuas_datalink::topics::C2_STATUS,cuas_datalink::BestEffortTelemetryQoS(),std::bind(&NatsBridgeNode::OnRosC2Status, this, std::placeholders::_1));
+    heartbeat_sub_ = this->create_subscription<std_msgs::msg::String>(cuas_datalink::topics::HEARTBEAT,cuas_datalink::BestEffortTelemetryQoS(), std::bind(&NatsBridgeNode::OnRosHeartbeat, this, std::placeholders::_1));
     SubscribeNats(subject_c2_command_, &NatsBridgeNode::OnNatsC2Command);
     SubscribeNats(subject_interceptor_status_, &NatsBridgeNode::OnNatsInterceptorStatus);
-
     RCLCPP_INFO(this->get_logger(), "nats_bridge_node started. url=%s", nats_url_.c_str());
   }
 

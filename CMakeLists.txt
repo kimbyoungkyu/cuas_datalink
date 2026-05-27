@@ -17,6 +17,8 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
+find_package(px4_msgs REQUIRED)
+find_package(cuas_msgs REQUIRED)
 
 include_directories(include)
 
@@ -27,6 +29,8 @@ set(COMMON_DEPENDENCIES
   nav_msgs
   sensor_msgs
   builtin_interfaces
+  px4_msgs 
+  cuas_msgs
 )
 
 add_executable(c2_command_node src/c2_command_node.cpp)

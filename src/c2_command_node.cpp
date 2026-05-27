@@ -5,6 +5,8 @@
 #include <std_msgs/msg/string.hpp>
 #include "cuas_datalink/qos_profiles.hpp"
 #include "cuas_datalink/topic_names.hpp"
+#include <px4_msgs/msg/offboard_control_mode.hpp>
+//#include <cuas_msgs/msg/c2_command.hpp>
 
 class C2CommandNode : public rclcpp::Node
 {

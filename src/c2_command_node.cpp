@@ -7,21 +7,9 @@
 #include <nats/nats.h>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
-#include <nlohmann/json.hpp>
 #include "cuas_datalink/qos_profiles.hpp"
 #include "cuas_datalink/topic_names.hpp"
-#include "cuas_msgs/msg/c2_command.hpp"
-#include "cuas_msgs/msg/engagement_result.hpp"
-#include "cuas_msgs/msg/fault_report.hpp"
-#include "cuas_msgs/msg/intercept_mission.hpp"
-#include "cuas_msgs/msg/interceptor_status.hpp"
-#include "cuas_msgs/msg/intercept_progress.hpp"
-#include "cuas_msgs/msg/mission_ack.hpp"
-#include "cuas_msgs/msg/target_track.hpp"
-
-
-using json = nlohmann::json;
-
+#include "cuas_datalink/jsonConverters.hpp"
 
 //C2 -> Interceptor Command, Mission Assignment, Target Track
 class C2CommandNode : public rclcpp::Node
@@ -40,7 +28,6 @@ public:
   ~C2CommandNode()
   {
     running_ = false;
-
     for (auto * sub : subscriptions_) {
       if (sub != nullptr) {
         natsSubscription_Destroy(sub);
@@ -53,11 +40,9 @@ public:
   }
 
 private:
-
   // =========================================================
   // NATS
   // =========================================================
-
   void ConnectNats()
   {
     nats_url_ = this->declare_parameter<std::string>("nats_url","nats://127.0.0.1:4222");
@@ -146,9 +131,9 @@ private:
     RCLCPP_INFO(this->get_logger(),"[C2 COMMAND] %s",data.c_str());
     //json을 파싱해서 cuas_msgs::msg::C2Command 메시지로 변환하는 로직이 들어갈 자리
     
+    
     auto c2_command_msg = cuas_msgs::msg::C2Command();
-    //json j = json::parse(data);
-    //j.get_to(c2_command_msg);
+    c2_command_json::from_json(json::parse(data), c2_command_msg);
     c2_command_pub_->publish(c2_command_msg);
 
     // TODO:
@@ -164,6 +149,8 @@ private:
     RCLCPP_INFO(this->get_logger(),"[MISSION] %s",data.c_str());
     //json을 파싱해서 cuas_msgs::msg::InterceptMission 메시지로 변환하는 로직이 들어갈 자리
     auto intercept_mission_msg = cuas_msgs::msg::InterceptMission();
+
+    //intercept_mission_json::from_json(json::parse(data), intercept_mission_msg);
     intercept_mission_pub_->publish(intercept_mission_msg);
 
     // TODO:
@@ -179,6 +166,7 @@ private:
     RCLCPP_INFO(this->get_logger(),"[TARGET TRACK] %s",data.c_str());
     //json을 파싱해서 cuas_msgs::msg::TargetTrack 메시지로 변환하는 로직이 들어갈 자리
     auto target_track_msg = cuas_msgs::msg::TargetTrack();
+    target_track_json::from_json(json::parse(data), target_track_msg);
     target_track_pub_->publish(target_track_msg);
     // TODO:
     // FCUASTargetTrack Parse 

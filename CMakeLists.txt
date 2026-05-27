@@ -8,7 +8,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(CUAS_DATALINK_ENABLE_NATS "Build NATS bridge node" ON)
+option(CUAS_DATALINK_ENABLE_NATS "Build NATS support" ON)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -29,7 +29,7 @@ set(COMMON_DEPENDENCIES
   nav_msgs
   sensor_msgs
   builtin_interfaces
-  px4_msgs 
+  px4_msgs
   cuas_msgs
 )
 
@@ -53,20 +53,84 @@ set(INSTALL_TARGETS
 )
 
 if(CUAS_DATALINK_ENABLE_NATS)
-  find_path(NATS_INCLUDE_DIR nats/nats.h)
-  find_library(NATS_LIBRARY nats)
+
+  find_path(
+    NATS_INCLUDE_DIR
+    NAMES nats/nats.h
+    PATHS
+      /usr/local/include
+      /usr/include
+  )
+
+  find_library(
+    NATS_LIBRARY
+    NAMES nats
+    PATHS
+      /usr/local/lib
+      /usr/lib
+      /usr/lib/x86_64-linux-gnu
+  )
 
   if(NATS_INCLUDE_DIR AND NATS_LIBRARY)
-    message(STATUS "NATS found: ${NATS_LIBRARY}")
-    add_executable(nats_bridge_node src/nats_bridge_node.cpp)
-    target_include_directories(nats_bridge_node PRIVATE ${NATS_INCLUDE_DIR})
-    target_link_libraries(nats_bridge_node ${NATS_LIBRARY})
-    ament_target_dependencies(nats_bridge_node ${COMMON_DEPENDENCIES})
-    list(APPEND INSTALL_TARGETS nats_bridge_node)
-    target_compile_definitions(nats_bridge_node PRIVATE CUAS_DATALINK_HAS_NATS=1)
+
+    message(STATUS "NATS include: ${NATS_INCLUDE_DIR}")
+    message(STATUS "NATS library: ${NATS_LIBRARY}")
+
+    target_include_directories(
+      c2_command_node
+      PRIVATE
+      ${NATS_INCLUDE_DIR}
+    )
+
+    target_link_libraries(
+      c2_command_node
+      ${NATS_LIBRARY}
+    )
+
+    target_compile_definitions(
+      c2_command_node
+      PRIVATE
+      CUAS_DATALINK_HAS_NATS=1
+    )
+
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/nats_bridge_node.cpp")
+
+      add_executable(nats_bridge_node src/nats_bridge_node.cpp)
+
+      target_include_directories(
+        nats_bridge_node
+        PRIVATE
+        ${NATS_INCLUDE_DIR}
+      )
+
+      target_link_libraries(
+        nats_bridge_node
+        ${NATS_LIBRARY}
+      )
+
+      ament_target_dependencies(
+        nats_bridge_node
+        ${COMMON_DEPENDENCIES}
+      )
+
+      target_compile_definitions(
+        nats_bridge_node
+        PRIVATE
+        CUAS_DATALINK_HAS_NATS=1
+      )
+
+      list(APPEND INSTALL_TARGETS nats_bridge_node)
+
+    endif()
+
   else()
-    message(WARNING "NATS C client was not found. nats_bridge_node will not be built. Install libnats-dev or build nats.c.")
+
+    message(WARNING "NATS C client was not found.")
+    message(WARNING "NATS dependent nodes may fail if they include nats/nats.h or call NATS APIs.")
+    message(WARNING "Install nats.c first or set CUAS_DATALINK_ENABLE_NATS=OFF.")
+
   endif()
+
 endif()
 
 install(TARGETS

@@ -207,7 +207,13 @@ namespace fault_report_json
 
 namespace target_track_json
 {
-  inline void ParseStamp(const json& j,builtin_interfaces::msg::Time& stamp)
+  // =========================================================
+  // Time
+  // =========================================================
+
+  inline void ParseStamp(
+    const json& j,
+    builtin_interfaces::msg::Time& stamp)
   {
     stamp.sec = j.value("sec", 0);
     stamp.nanosec = j.value("nanosec", 0u);
@@ -221,48 +227,365 @@ namespace target_track_json
     };
   }
 
-  inline void from_json(const json& j,cuas_msgs::msg::TargetTrack& msg)
+  // =========================================================
+  // Track State
+  // =========================================================
+
+  inline uint8_t ParseTrackState(const json& j)
   {
-    if (j.contains("stamp")) {
+    if (!j.contains("trackState") || j["trackState"].is_null())
+    {
+      return 0;
+    }
+
+    const auto& v = j["trackState"];
+
+    // 숫자 처리
+    if (v.is_number_integer())
+    {
+      return static_cast<uint8_t>(v.get<int>());
+    }
+
+    // 문자열 처리
+    if (v.is_string())
+    {
+      const std::string s = v.get<std::string>();
+
+      if (s == "Tracking")   return 1;
+      if (s == "Detected")   return 2;
+      if (s == "Lost")       return 3;
+      if (s == "Tentative")  return 4;
+      if (s == "Confirmed")  return 5;
+
+      return 0;
+    }
+
+    return 0;
+  }
+
+  inline std::string TrackStateToString(uint8_t state)
+  {
+    switch (state)
+    {
+      case 1: return "Tracking";
+      case 2: return "Detected";
+      case 3: return "Lost";
+      case 4: return "Tentative";
+      case 5: return "Confirmed";
+      default: return "Unknown";
+    }
+  }
+
+  // =========================================================
+  // From JSON
+  // =========================================================
+
+  inline void from_json(
+    const json& j,
+    cuas_msgs::msg::TargetTrack& msg)
+  {
+    // -----------------------------
+    // Stamp
+    // -----------------------------
+    if (j.contains("stamp"))
+    {
       ParseStamp(j["stamp"], msg.stamp);
     }
 
-    msg.target_id = j.value("targetId", "");
+    // -----------------------------
+    // Target
+    // -----------------------------
+    msg.target_id =
+      j.value("targetId", "");
 
-    msg.latitude = j.value("latitude", 0.0);
-    msg.longitude = j.value("longitude", 0.0);
-    msg.altitude = j.value("altitude", 0.0f);
+    // -----------------------------
+    // Position
+    // -----------------------------
+    msg.latitude =
+      j.value("latitude", 0.0);
 
-    msg.velocity_x = j.value("velocityX", 0.0f);
-    msg.velocity_y = j.value("velocityY", 0.0f);
-    msg.velocity_z = j.value("velocityZ", 0.0f);
+    msg.longitude =
+      j.value("longitude", 0.0);
 
-    msg.heading = j.value("heading", 0.0f);
-    msg.confidence = j.value("confidence", 0.0f);
+    msg.altitude =
+      j.value("altitude", 0.0f);
+
+    // -----------------------------
+    // Velocity
+    // -----------------------------
+    msg.velocity_x =
+      j.value("velocityX", 0.0f);
+
+    msg.velocity_y =
+      j.value("velocityY", 0.0f);
+
+    msg.velocity_z =
+      j.value("velocityZ", 0.0f);
+
+    // -----------------------------
+    // Track Info
+    // -----------------------------
+    msg.heading =
+      j.value("heading", 0.0f);
+
+    msg.confidence =
+      j.value("confidence", 0.0f);
 
     msg.track_state =
-      static_cast<uint8_t>(j.value("trackState", 0));
+      ParseTrackState(j);
   }
 
-  inline json to_json(const cuas_msgs::msg::TargetTrack& msg)
+  // =========================================================
+  // To JSON
+  // =========================================================
+
+  inline json to_json(
+    const cuas_msgs::msg::TargetTrack& msg)
   {
     return {
-      {"stamp", ToJsonStamp(msg.stamp)},
+      // -----------------------------
+      // Stamp
+      // -----------------------------
+      {
+        "stamp",
+        ToJsonStamp(msg.stamp)
+      },
 
-      {"targetId", msg.target_id},
+      // -----------------------------
+      // Target
+      // -----------------------------
+      {
+        "targetId",
+        msg.target_id
+      },
 
-      {"latitude", msg.latitude},
-      {"longitude", msg.longitude},
-      {"altitude", msg.altitude},
+      // -----------------------------
+      // Position
+      // -----------------------------
+      {
+        "latitude",
+        msg.latitude
+      },
+      {
+        "longitude",
+        msg.longitude
+      },
+      {
+        "altitude",
+        msg.altitude
+      },
 
-      {"velocityX", msg.velocity_x},
-      {"velocityY", msg.velocity_y},
-      {"velocityZ", msg.velocity_z},
+      // -----------------------------
+      // Velocity
+      // -----------------------------
+      {
+        "velocityX",
+        msg.velocity_x
+      },
+      {
+        "velocityY",
+        msg.velocity_y
+      },
+      {
+        "velocityZ",
+        msg.velocity_z
+      },
 
-      {"heading", msg.heading},
-      {"confidence", msg.confidence},
+      // -----------------------------
+      // Track Info
+      // -----------------------------
+      {
+        "heading",
+        msg.heading
+      },
+      {
+        "confidence",
+        msg.confidence
+      },
 
-      {"trackState", msg.track_state}
+      // 문자열로 출력
+      {
+        "trackState",
+        TrackStateToString(msg.track_state)
+      }
     };
   }
-} // namespace target_track_json
+
+} // namespace target_track_jso
+
+
+namespace interceptor_report
+{
+  inline std::string ResultToString(uint8_t result)
+  {
+      switch (result)
+      {
+          case 0: return "UNKNOWN";
+          case 1: return "SUCCESS_SIM";
+          case 2: return "MISSED_SIM";
+          case 3: return "ABORTED";
+          case 4: return "TARGET_LOST";
+          case 5: return "SYSTEM_FAULT";
+          case 6: return "SAFETY_ABORT";
+          default: return "INVALID";
+      }
+  }
+
+  inline json EngagementResultToJson(const cuas_msgs::msg::EngagementResult::SharedPtr& msg)
+  {
+      return {
+          {
+              "stamp",
+              {
+                  {"sec", msg->stamp.sec},
+                  {"nanosec", msg->stamp.nanosec}
+              }
+          },
+
+          {"mission_id", msg->mission_id},
+          {"interceptor_id", msg->interceptor_id},
+          {"target_id", msg->target_id},
+
+          {"result", msg->result},
+          {"result_text", ResultToString(msg->result)},
+
+          {"final_distance", msg->final_distance},
+          {"engagement_time_sec", msg->engagement_time_sec},
+
+          {"summary", msg->summary}
+      };
+  }
+
+
+  inline std::string SeverityToString(uint8_t severity)
+  {
+      switch (severity)
+      {
+          case 0: return "INFO";
+          case 1: return "WARNING";
+          case 2: return "ERROR";
+          case 3: return "CRITICAL";
+          default: return "UNKNOWN";
+      }
+  }
+
+  inline json FaultReportToJson(const cuas_msgs::msg::FaultReport::SharedPtr& msg)
+  {
+      return {
+          {
+              "stamp",
+              {
+                  {"sec", msg->stamp.sec},
+                  {"nanosec", msg->stamp.nanosec}
+              }
+          },
+
+          {"interceptor_id", msg->interceptor_id},
+          {"mission_id", msg->mission_id},
+
+          {"severity", msg->severity},
+          {"severity_text", SeverityToString(msg->severity)},
+
+          {"fault_code", msg->fault_code},
+          {"fault_name", msg->fault_name},
+          {"description", msg->description},
+
+          {"requires_abort", msg->requires_abort}
+      };
+  }
+
+
+  inline json InterceptorStatusToJson(const cuas_msgs::msg::InterceptorStatus::SharedPtr& msg)
+  {
+      return {
+          {
+              "stamp",
+              {
+                  {"sec", msg->stamp.sec},
+                  {"nanosec", msg->stamp.nanosec}
+              }
+          },
+
+          {"interceptor_id", msg->interceptor_id},
+          {"mission_id", msg->mission_id},
+
+          {"vehicle_state", msg->vehicle_state},
+
+          {"latitude", msg->latitude},
+          {"longitude", msg->longitude},
+          {"altitude", msg->altitude},
+
+          {"velocity_x", msg->velocity_x},
+          {"velocity_y", msg->velocity_y},
+          {"velocity_z", msg->velocity_z},
+
+          {"battery_remaining", msg->battery_remaining},
+
+          {"armed", msg->armed},
+          {"offboard_enabled", msg->offboard_enabled},
+          {"healthy", msg->healthy}
+      };
+  }  
+
+  inline json InterceptorMissionStatusToJson(const cuas_msgs::msg::InterceptProgress::SharedPtr& msg)
+  {
+      return {
+          {
+              "stamp",
+              {
+                  {"sec", msg->stamp.sec},
+                  {"nanosec", msg->stamp.nanosec}
+              }
+          },
+
+          {"mission_id", msg->mission_id},
+          {"interceptor_id", msg->interceptor_id},
+          {"target_id", msg->target_id},
+
+          {"phase", msg->phase},
+
+          {"distance_to_target", msg->distance_to_target},
+          {"relative_speed", msg->relative_speed},
+          {"mission_elapsed_sec", msg->mission_elapsed_sec},
+
+          {"status_text", msg->status_text}
+      };
+  }
+
+  inline json IntercepterMissionAckToJson(const cuas_msgs::msg::MissionAck::SharedPtr& msg)
+  {
+      return {
+          {
+              "stamp",
+              {
+                  {"sec", msg->stamp.sec},
+                  {"nanosec", msg->stamp.nanosec}
+              }
+          },
+
+          {"command_id", msg->command_id},
+          {"mission_id", msg->mission_id},
+          {"interceptor_id", msg->interceptor_id},
+
+          {"accepted", msg->accepted},
+          {"result_code", msg->result_code},
+
+          {"message", msg->message}
+      };
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

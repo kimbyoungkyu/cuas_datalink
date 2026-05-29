@@ -15,23 +15,9 @@ public:
   {
     ConnectNats();
 
-    engagement_result_sub_ = this->create_subscription<cuas_msgs::msg::EngagementResult>(
-        cuas_datalink::topics::ENGAGEMENT_RESULT,
-        cuas_datalink::ReliableControlQoS(),
-        std::bind(&InterceptorReportNode::OnEngagementResult,this,std::placeholders::_1));
-
-    fault_report_sub_ =
-      this->create_subscription<cuas_msgs::msg::FaultReport>(
-        cuas_datalink::topics::FAULT_REPORT,
-        cuas_datalink::ReliableControlQoS(),
-        std::bind(
-          &InterceptorReportNode::OnFaultReport,
-          this,
-          std::placeholders::_1));
-
     interceptor_status_sub_ =
       this->create_subscription<cuas_msgs::msg::InterceptorStatus>(
-        cuas_datalink::topics::INTERCEPTOR_STATUS,
+        "/cuas/interceptor/status",
         cuas_datalink::ReliableControlQoS(),
         std::bind(
           &InterceptorReportNode::OnInterceptorStatus,
@@ -40,21 +26,40 @@ public:
 
     intercept_progress_sub_ =
       this->create_subscription<cuas_msgs::msg::InterceptProgress>(
-        cuas_datalink::topics::INTERCEPT_PROGRESS,
+        "/cuas/interceptor/progress",
         cuas_datalink::ReliableControlQoS(),
         std::bind(
           &InterceptorReportNode::OnInterceptProgress,
           this,
           std::placeholders::_1));
 
+
     mission_ack_sub_ =
       this->create_subscription<cuas_msgs::msg::MissionAck>(
-        cuas_datalink::topics::MISSION_ACK,
+        "/cuas/interceptor/ack",
         cuas_datalink::ReliableControlQoS(),
         std::bind(
           &InterceptorReportNode::OnMissionAck,
           this,
           std::placeholders::_1));
+
+    
+    engagement_result_sub_ = this->create_subscription<cuas_msgs::msg::EngagementResult>(
+        "/cuas/interceptor/result",
+        cuas_datalink::ReliableControlQoS(),
+        std::bind(&InterceptorReportNode::OnEngagementResult,this,std::placeholders::_1));
+
+    fault_report_sub_ =
+      this->create_subscription<cuas_msgs::msg::FaultReport>(
+        "/cuas/interceptor/fault",
+        cuas_datalink::ReliableControlQoS(),
+        std::bind(
+          &InterceptorReportNode::OnFaultReport,
+          this,
+          std::placeholders::_1));
+
+
+
 
     RCLCPP_INFO(this->get_logger(), "interceptor_report_node started");
   }
@@ -90,7 +95,6 @@ private:
     running_ = true;
     RCLCPP_INFO(this->get_logger(), "NATS connected successfully");
   }
-
   void PublishNatsJson(const std::string& subject,const std::string& json)
   {
     std::lock_guard<std::mutex> lock(nats_mutex_);
@@ -102,41 +106,53 @@ private:
       RCLCPP_ERROR(this->get_logger(),"NATS publish failed: subject=%s error=%s",subject.c_str(),natsStatus_GetText(status));
     }
   }
-
   void OnEngagementResult(const cuas_msgs::msg::EngagementResult::SharedPtr msg)
   {
-    (void)msg;
-    std::string json = R"({"type":"engagement_result"})";
-    PublishNatsJson(cuas_datalink::nats_subjects::ENGAGEMENT_RESULT, json);
+    RCLCPP_INFO(this->get_logger(), "OnEngagementResult");
+    json j = interceptor_report::EngagementResultToJson(msg);
+    std::string json_string = j.dump(4);
+    RCLCPP_INFO(this->get_logger(), json_string.c_str());
+    PublishNatsJson(cuas_datalink::nats_subjects::ENGAGEMENT_RESULT, json_string);
   }
-
   void OnFaultReport(const cuas_msgs::msg::FaultReport::SharedPtr msg)
   {
     (void)msg;
-    std::string json = R"({"type":"fault_report"})";
-    PublishNatsJson(cuas_datalink::nats_subjects::FAULT_REPORT, json);
+    RCLCPP_INFO(this->get_logger(), "OnFaultReport");
+    json j = interceptor_report::FaultReportToJson(msg);
+    std::string json_string = j.dump(4);
+    RCLCPP_INFO(this->get_logger(), json_string.c_str());
+    PublishNatsJson(cuas_datalink::nats_subjects::FAULT_REPORT, json_string);
   }
-
   void OnInterceptorStatus(const cuas_msgs::msg::InterceptorStatus::SharedPtr msg)
   {
     (void)msg;
-    std::string json = R"({"type":"interceptor_status"})";
-    PublishNatsJson(cuas_datalink::nats_subjects::INTERCEPTOR_STATUS, json);
+    RCLCPP_INFO(this->get_logger(), "OnInterceptorStatus");
+    //std::string json = R"({"type":"interceptor_status"})";
+    
+    json j = interceptor_report::InterceptorStatusToJson(msg);
+    std::string json_string = j.dump(4);
+    RCLCPP_INFO(this->get_logger(), json_string.c_str());
+    PublishNatsJson(cuas_datalink::nats_subjects::INTERCEPTOR_STATUS, json_string);
   }
-
   void OnInterceptProgress(const cuas_msgs::msg::InterceptProgress::SharedPtr msg)
   {
     (void)msg;
+    RCLCPP_INFO(this->get_logger(), "OnInterceptProgress");
+    //std::string json = R"({"type":"intercept_progress"})";
 
-    std::string json = R"({"type":"intercept_progress"})";
-    PublishNatsJson(cuas_datalink::nats_subjects::INTERCEPT_PROGRESS, json);
+    json j = interceptor_report::InterceptorMissionStatusToJson(msg);
+    std::string json_string = j.dump(4);
+    RCLCPP_INFO(this->get_logger(), json_string.c_str());
+    PublishNatsJson(cuas_datalink::nats_subjects::INTERCEPT_PROGRESS, json_string);
   }
-
   void OnMissionAck(const cuas_msgs::msg::MissionAck::SharedPtr msg)
   {
     (void)msg;
-    std::string json = R"({"type":"mission_ack"})";
-    PublishNatsJson(cuas_datalink::nats_subjects::MISSION_ACK , json);
+    RCLCPP_INFO(this->get_logger(), "OnMissionAck");
+    json j = interceptor_report::IntercepterMissionAckToJson(msg);
+    std::string json_string = j.dump(4);
+    RCLCPP_INFO(this->get_logger(), json_string.c_str());
+    PublishNatsJson(cuas_datalink::nats_subjects::MISSION_ACK , json_string);
   }
 
 private:
@@ -146,6 +162,7 @@ private:
   std::atomic_bool running_{false};
   rclcpp::Subscription<cuas_msgs::msg::EngagementResult>::SharedPtr engagement_result_sub_;
   rclcpp::Subscription<cuas_msgs::msg::FaultReport>::SharedPtr fault_report_sub_;
+  rclcpp::Subscription<cuas_msgs::msg::InterceptMission>::SharedPtr interceptor_mission_sub_;
   rclcpp::Subscription<cuas_msgs::msg::InterceptorStatus>::SharedPtr interceptor_status_sub_;
   rclcpp::Subscription<cuas_msgs::msg::InterceptProgress>::SharedPtr intercept_progress_sub_;
   rclcpp::Subscription<cuas_msgs::msg::MissionAck>::SharedPtr mission_ack_sub_;

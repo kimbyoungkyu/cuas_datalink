@@ -413,7 +413,7 @@ namespace target_track_json
 
 } // namespace target_track_jso
 
-
+#if 0
 namespace interceptor_report
 {
   inline std::string ResultToString(uint8_t result)
@@ -572,6 +572,203 @@ namespace interceptor_report
 
           {"message", msg->message}
       };
+  }
+}
+#endif
+
+
+
+namespace interceptor_report
+{
+  inline std::string ResultToString(uint8_t result)
+  {
+    switch (result)
+    {
+      case 0: return "Unknown";
+      case 1: return "SuccessSim";
+      case 2: return "MissedSim";
+      case 3: return "Aborted";
+      case 4: return "TargetLost";
+      case 5: return "SystemFault";
+      case 6: return "SafetyAbort";
+      default: return "Invalid";
+    }
+  }
+
+  inline std::string SeverityToString(uint8_t severity)
+  {
+    switch (severity)
+    {
+      case 0: return "Info";
+      case 1: return "Warning";
+      case 2: return "Error";
+      case 3: return "Critical";
+      default: return "Unknown";
+    }
+  }
+
+  inline std::string VehicleStateToString(uint8_t state)
+  {
+    switch (state)
+    {
+      case 0: return "Idle";
+      case 1: return "Ready";
+      case 2: return "Armed";
+      case 3: return "Active";
+      case 4: return "Holding";
+      case 5: return "Returning";
+      case 6: return "Landed";
+      case 7: return "Fault";
+      default: return "Unknown";
+    }
+  }
+
+  inline std::string PhaseToString(uint8_t phase)
+  {
+    switch (phase)
+    {
+      case 0: return "None";
+      case 1: return "Assigned";
+      case 2: return "Preparing";
+      case 3: return "Launched";
+      case 4: return "Midcourse";
+      case 5: return "CooperativeTracking";
+      case 6: return "TerminalApproachSim";
+      case 7: return "Completed";
+      case 8: return "Aborted";
+      case 9: return "Failed";
+      default: return "Unknown";
+    }
+  }
+
+  inline std::string CommandResultCodeToString(uint8_t code)
+  {
+    switch (code)
+    {
+      case 0: return "OK";
+      case 1: return "Rejected";
+      case 2: return "Busy";
+      case 3: return "InvalidTarget";
+      case 4: return "NotReady";
+      case 5: return "SafetyBlocked";
+      case 6: return "InternalError";
+      default: return "Unknown";
+    }
+  }
+
+  inline json StampToJson(const builtin_interfaces::msg::Time& stamp)
+  {
+    return {
+      {"sec", stamp.sec},
+      {"nanosec", stamp.nanosec}
+    };
+  }
+
+  inline json EngagementResultToJson(
+    const cuas_msgs::msg::EngagementResult::SharedPtr& msg)
+  {
+    return {
+      {"stamp", StampToJson(msg->stamp)},
+
+      {"missionId", msg->mission_id},
+      {"interceptorId", msg->interceptor_id},
+      {"targetId", msg->target_id},
+
+      {"result", msg->result},
+      {"resultText", ResultToString(msg->result)},
+
+      {"finalDistance", msg->final_distance},
+      {"engagementTimeSec", msg->engagement_time_sec},
+
+      {"summary", msg->summary}
+    };
+  }
+
+  inline json FaultReportToJson(
+    const cuas_msgs::msg::FaultReport::SharedPtr& msg)
+  {
+    return {
+      {"stamp", StampToJson(msg->stamp)},
+
+      {"interceptorId", msg->interceptor_id},
+      {"missionId", msg->mission_id},
+
+      {"severity", msg->severity},
+      {"severityText", SeverityToString(msg->severity)},
+
+      {"faultCode", msg->fault_code},
+      {"faultName", msg->fault_name},
+      {"description", msg->description},
+
+      {"requiresAbort", msg->requires_abort}
+    };
+  }
+
+  inline json InterceptorStatusToJson(
+    const cuas_msgs::msg::InterceptorStatus::SharedPtr& msg)
+  {
+    return {
+      {"stamp", StampToJson(msg->stamp)},
+
+      {"interceptorId", msg->interceptor_id},
+      {"missionId", msg->mission_id},
+
+      {"vehicleState", msg->vehicle_state},
+      {"vehicleStateText", VehicleStateToString(msg->vehicle_state)},
+
+      {"latitude", msg->latitude},
+      {"longitude", msg->longitude},
+      {"altitude", msg->altitude},
+
+      {"velocityX", msg->velocity_x},
+      {"velocityY", msg->velocity_y},
+      {"velocityZ", msg->velocity_z},
+
+      {"batteryRemaining", msg->battery_remaining},
+
+      {"armed", msg->armed},
+      {"offboardEnabled", msg->offboard_enabled},
+      {"healthy", msg->healthy}
+    };
+  }
+
+  inline json InterceptorMissionStatusToJson(
+    const cuas_msgs::msg::InterceptProgress::SharedPtr& msg)
+  {
+    return {
+      {"stamp", StampToJson(msg->stamp)},
+
+      {"missionId", msg->mission_id},
+      {"interceptorId", msg->interceptor_id},
+      {"targetId", msg->target_id},
+
+      {"phase", msg->phase},
+      {"phaseText", PhaseToString(msg->phase)},
+
+      {"distanceToTarget", msg->distance_to_target},
+      {"relativeSpeed", msg->relative_speed},
+      {"missionElapsedSec", msg->mission_elapsed_sec},
+
+      {"statusText", msg->status_text}
+    };
+  }
+
+  inline json IntercepterMissionAckToJson(
+    const cuas_msgs::msg::MissionAck::SharedPtr& msg)
+  {
+    return {
+      {"stamp", StampToJson(msg->stamp)},
+
+      {"commandId", msg->command_id},
+      {"missionId", msg->mission_id},
+      {"interceptorId", msg->interceptor_id},
+
+      {"accepted", msg->accepted},
+      {"resultCode", msg->result_code},
+      {"resultCodeText", CommandResultCodeToString(msg->result_code)},
+
+      {"message", msg->message}
+    };
   }
 }
 

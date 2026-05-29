@@ -70,6 +70,158 @@ namespace c2_command_json
 }
 
 
+namespace intercept_mission_json
+{
+  inline void ParseStamp(
+    const json& j,
+    builtin_interfaces::msg::Time& stamp)
+  {
+    if (!j.is_object())
+    {
+      stamp.sec = 0;
+      stamp.nanosec = 0;
+      return;
+    }
+
+    stamp.sec = j.value("sec", 0);
+    stamp.nanosec = j.value("nanosec", 0u);
+  }
+
+  inline uint8_t ParseC2CommandType(const json& j)
+  {
+    if (!j.contains("commandType") || j["commandType"].is_null())
+      return 0;
+
+    const auto& v = j["commandType"];
+
+    if (v.is_number_integer())
+      return static_cast<uint8_t>(v.get<int>());
+
+    if (v.is_string())
+    {
+      const std::string s = v.get<std::string>();
+
+      if (s == "AssignTarget") return cuas_msgs::msg::C2Command::ASSIGN_TARGET;
+      if (s == "PrepareIntercept") return cuas_msgs::msg::C2Command::PREPARE_INTERCEPT;
+      if (s == "AuthorizeLaunch") return cuas_msgs::msg::C2Command::AUTHORIZE_LAUNCH;
+      if (s == "StartIntercept") return cuas_msgs::msg::C2Command::START_INTERCEPT;
+      if (s == "UpdateTarget") return cuas_msgs::msg::C2Command::UPDATE_TARGET;
+      if (s == "UpdateMission") return cuas_msgs::msg::C2Command::UPDATE_MISSION;
+      if (s == "Hold") return cuas_msgs::msg::C2Command::HOLD;
+      if (s == "Abort") return cuas_msgs::msg::C2Command::ABORT;
+      if (s == "ReturnHome") return cuas_msgs::msg::C2Command::RETURN_HOME;
+      if (s == "Land") return cuas_msgs::msg::C2Command::LAND;
+    }
+
+    return 0;
+  }
+
+  inline uint8_t ParseTrackState(const json& j)
+  {
+    if (!j.contains("trackState") || j["trackState"].is_null())
+      return cuas_msgs::msg::TargetTrack::UNKNOWN;
+
+    const auto& v = j["trackState"];
+
+    if (v.is_number_integer())
+      return static_cast<uint8_t>(v.get<int>());
+
+    if (v.is_string())
+    {
+      const std::string s = v.get<std::string>();
+
+      if (s == "Unknown") return cuas_msgs::msg::TargetTrack::UNKNOWN;
+      if (s == "Detected") return cuas_msgs::msg::TargetTrack::DETECTED;
+      if (s == "Tracking") return cuas_msgs::msg::TargetTrack::TRACKING;
+      if (s == "Lost") return cuas_msgs::msg::TargetTrack::LOST;
+      if (s == "Confirmed") return cuas_msgs::msg::TargetTrack::CONFIRMED;
+    }
+
+    return cuas_msgs::msg::TargetTrack::UNKNOWN;
+  }
+
+  inline void FromJson(
+    const json& j,
+    cuas_msgs::msg::C2Command& msg)
+  {
+    if (!j.is_object())
+      return;
+
+    if (j.contains("stamp"))
+      ParseStamp(j["stamp"], msg.stamp);
+
+    msg.command_id = j.value("commandId", "");
+    msg.mission_id = j.value("missionId", "");
+    msg.interceptor_id = j.value("interceptorId", "");
+    msg.target_id = j.value("targetId", "");
+
+    msg.command_type = ParseC2CommandType(j);
+
+    msg.reason = j.value("reason", "");
+  }
+
+  inline void FromJson(
+    const json& j,
+    cuas_msgs::msg::TargetTrack& msg)
+  {
+    if (!j.is_object())
+      return;
+
+    if (j.contains("stamp"))
+      ParseStamp(j["stamp"], msg.stamp);
+
+    msg.target_id = j.value("targetId", "");
+
+    msg.latitude = j.value("latitude", 0.0);
+    msg.longitude = j.value("longitude", 0.0);
+    msg.altitude = j.value("altitude", 0.0f);
+
+    msg.velocity_x = j.value("velocityX", 0.0f);
+    msg.velocity_y = j.value("velocityY", 0.0f);
+    msg.velocity_z = j.value("velocityZ", 0.0f);
+
+    msg.heading = j.value("heading", 0.0f);
+    msg.confidence = j.value("confidence", 0.0f);
+
+    msg.track_state = ParseTrackState(j);
+  }
+
+  inline void FromJson(
+    const json& j,
+    cuas_msgs::msg::InterceptMission& msg)
+  {
+    if (!j.is_object())
+      return;
+
+    if (j.contains("stamp"))
+      ParseStamp(j["stamp"], msg.stamp);
+
+    msg.mission_id = j.value("missionId", "");
+    msg.interceptor_id = j.value("interceptorId", "");
+    msg.target_id = j.value("targetId", "");
+
+    if (j.contains("target") && j["target"].is_object())
+      FromJson(j["target"], msg.target);
+
+    msg.max_speed = j.value("maxSpeed", 0.0f);
+    msg.safe_altitude = j.value("safeAltitude", 0.0f);
+    msg.loiter_altitude = j.value("loiterAltitude", 0.0f);
+
+    msg.launch_latitude = j.value("launchLatitude", 0.0);
+    msg.launch_longitude = j.value("launchLongitude", 0.0);
+    msg.launch_altitude = j.value("launchAltitude", 0.0f);
+
+    msg.home_latitude = j.value("homeLatitude", 0.0);
+    msg.home_longitude = j.value("homeLongitude", 0.0);
+    msg.home_altitude = j.value("homeAltitude", 0.0f);
+
+    msg.allow_terminal_phase = j.value("allowTerminalPhase", false);
+    msg.allow_auto_return = j.value("allowAutoReturn", false);
+    msg.allow_abort_on_lost_target = j.value("allowAbortOnLostTarget", false);
+  }
+}
+
+
 namespace engagement_result_json
 {
   inline void ParseStamp(const json& j,builtin_interfaces::msg::Time& stamp)
@@ -236,13 +388,10 @@ namespace target_track_json
     if (v.is_string())
     {
       const std::string s = v.get<std::string>();
-
-      if (s == "Tracking")   return 1;
-      if (s == "Detected")   return 2;
+      if (s == "Detected")   return 1;
+      if (s == "Tracking")   return 2;
       if (s == "Lost")       return 3;
-      if (s == "Tentative")  return 4;
-      if (s == "Confirmed")  return 5;
-
+      if (s == "Confirmed")  return 4;
       return 0;
     }
 
@@ -398,171 +547,6 @@ namespace target_track_json
   }
 
 } // namespace target_track_jso
-
-#if 0
-namespace interceptor_report
-{
-  inline std::string ResultToString(uint8_t result)
-  {
-      switch (result)
-      {
-          case 0: return "UNKNOWN";
-          case 1: return "SUCCESS_SIM";
-          case 2: return "MISSED_SIM";
-          case 3: return "ABORTED";
-          case 4: return "TARGET_LOST";
-          case 5: return "SYSTEM_FAULT";
-          case 6: return "SAFETY_ABORT";
-          default: return "INVALID";
-      }
-  }
-
-  inline json EngagementResultToJson(const cuas_msgs::msg::EngagementResult::SharedPtr& msg)
-  {
-      return {
-          {
-              "stamp",
-              {
-                  {"sec", msg->stamp.sec},
-                  {"nanosec", msg->stamp.nanosec}
-              }
-          },
-
-          {"mission_id", msg->mission_id},
-          {"interceptor_id", msg->interceptor_id},
-          {"target_id", msg->target_id},
-
-          {"result", msg->result},
-          {"result_text", ResultToString(msg->result)},
-
-          {"final_distance", msg->final_distance},
-          {"engagement_time_sec", msg->engagement_time_sec},
-
-          {"summary", msg->summary}
-      };
-  }
-
-
-  inline std::string SeverityToString(uint8_t severity)
-  {
-      switch (severity)
-      {
-          case 0: return "INFO";
-          case 1: return "WARNING";
-          case 2: return "ERROR";
-          case 3: return "CRITICAL";
-          default: return "UNKNOWN";
-      }
-  }
-
-  inline json FaultReportToJson(const cuas_msgs::msg::FaultReport::SharedPtr& msg)
-  {
-      return {
-          {
-              "stamp",
-              {
-                  {"sec", msg->stamp.sec},
-                  {"nanosec", msg->stamp.nanosec}
-              }
-          },
-
-          {"interceptor_id", msg->interceptor_id},
-          {"mission_id", msg->mission_id},
-
-          {"severity", msg->severity},
-          {"severity_text", SeverityToString(msg->severity)},
-
-          {"fault_code", msg->fault_code},
-          {"fault_name", msg->fault_name},
-          {"description", msg->description},
-
-          {"requires_abort", msg->requires_abort}
-      };
-  }
-
-
-  inline json InterceptorStatusToJson(const cuas_msgs::msg::InterceptorStatus::SharedPtr& msg)
-  {
-      return {
-          {
-              "stamp",
-              {
-                  {"sec", msg->stamp.sec},
-                  {"nanosec", msg->stamp.nanosec}
-              }
-          },
-
-          {"interceptor_id", msg->interceptor_id},
-          {"mission_id", msg->mission_id},
-
-          {"vehicle_state", msg->vehicle_state},
-
-          {"latitude", msg->latitude},
-          {"longitude", msg->longitude},
-          {"altitude", msg->altitude},
-
-          {"velocity_x", msg->velocity_x},
-          {"velocity_y", msg->velocity_y},
-          {"velocity_z", msg->velocity_z},
-
-          {"battery_remaining", msg->battery_remaining},
-
-          {"armed", msg->armed},
-          {"offboard_enabled", msg->offboard_enabled},
-          {"healthy", msg->healthy}
-      };
-  }  
-
-  inline json InterceptorMissionStatusToJson(const cuas_msgs::msg::InterceptProgress::SharedPtr& msg)
-  {
-      return {
-          {
-              "stamp",
-              {
-                  {"sec", msg->stamp.sec},
-                  {"nanosec", msg->stamp.nanosec}
-              }
-          },
-
-          {"mission_id", msg->mission_id},
-          {"interceptor_id", msg->interceptor_id},
-          {"target_id", msg->target_id},
-
-          {"phase", msg->phase},
-
-          {"distance_to_target", msg->distance_to_target},
-          {"relative_speed", msg->relative_speed},
-          {"mission_elapsed_sec", msg->mission_elapsed_sec},
-
-          {"status_text", msg->status_text}
-      };
-  }
-
-  inline json IntercepterMissionAckToJson(const cuas_msgs::msg::MissionAck::SharedPtr& msg)
-  {
-      return {
-          {
-              "stamp",
-              {
-                  {"sec", msg->stamp.sec},
-                  {"nanosec", msg->stamp.nanosec}
-              }
-          },
-
-          {"command_id", msg->command_id},
-          {"mission_id", msg->mission_id},
-          {"interceptor_id", msg->interceptor_id},
-
-          {"accepted", msg->accepted},
-          {"result_code", msg->result_code},
-
-          {"message", msg->message}
-      };
-  }
-}
-#endif
-
-
 
 namespace interceptor_report
 {

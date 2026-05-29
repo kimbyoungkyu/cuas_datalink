@@ -17,8 +17,8 @@ class C2CommandNode : public rclcpp::Node
 public:
   C2CommandNode()  : Node("c2_command_node")
   {
-    c2_command_pub_ = this->create_publisher<cuas_msgs::msg::C2Command>(cuas_datalink::topics::C2_COMMAND,cuas_datalink::ReliableControlQoS());
-    intercept_mission_pub_ = this->create_publisher<cuas_msgs::msg::InterceptMission>(cuas_datalink::topics::INTERCEPT_MISSION,cuas_datalink::ReliableControlQoS());
+    c2_command_pub_ = this->create_publisher<cuas_msgs::msg::C2Command>("/cuas/c2/command",cuas_datalink::ReliableControlQoS());
+    intercept_mission_pub_ = this->create_publisher<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",cuas_datalink::ReliableControlQoS());
     target_track_pub_ = this->create_publisher<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",cuas_datalink::ReliableControlQoS());
     ConnectNats();
     SubscribeNats();
@@ -128,7 +128,7 @@ private:
 
   void HandleC2Command(const std::string& data,const std::string& reply)
   {
-    RCLCPP_INFO(this->get_logger(),"[cuas.c2.mission] %s",data.c_str());
+    RCLCPP_INFO(this->get_logger(),"[cuas.c2.command] %s",data.c_str());
     //json을 파싱해서 cuas_msgs::msg::C2Command 메시지로 변환하는 로직이 들어갈 자리
     
     
@@ -146,10 +146,10 @@ private:
 
   void HandleInterceptMission(const std::string& data,const std::string& reply)
   {
-    RCLCPP_INFO(this->get_logger(),"[cuas.c2.command] %s",data.c_str());
+    RCLCPP_INFO(this->get_logger(),"[cuas.c2.mission] %s",data.c_str());
     auto intercept_mission_msg = cuas_msgs::msg::InterceptMission();
 
-    //intercept_mission_json::from_json(json::parse(data), intercept_mission_msg);
+    intercept_mission_json::FromJson(json::parse(data), intercept_mission_msg);
     intercept_mission_pub_->publish(intercept_mission_msg);
 
     // TODO:

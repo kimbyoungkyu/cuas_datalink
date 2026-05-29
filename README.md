@@ -109,6 +109,7 @@ Ubuntu 예시:
 ```bash
 sudo apt update
 sudo apt install ros-humble-rclcpp ros-humble-std-msgs
+sudo apt install nlohmann-json3-dev
 ```
 
 NATS C client는 환경에 따라 직접 빌드가 필요할 수 있습니다.

@@ -15,74 +15,60 @@ using json = nlohmann::json;
 
 namespace c2_command_json
 {
-  inline void from_json(const json& j,cuas_msgs::msg::C2Command& msg)
+  inline uint8_t ParseCommandType(const json& j)
   {
-    if (j.contains("stamp"))
+    if (!j.contains("commandType") || j["commandType"].is_null())
     {
-      const auto& stamp = j["stamp"];
-
-      msg.stamp.sec =
-        stamp.value("sec", 0);
-
-      msg.stamp.nanosec =
-        stamp.value("nanosec", 0u);
+      return 0;
     }
 
-    // -------------------------------------------------------
-    // string
-    // -------------------------------------------------------
+    const auto& v = j["commandType"];
 
-    msg.command_id =
-      j.value("commandId", "");
+    if (v.is_number_integer())
+    {
+      return static_cast<uint8_t>(v.get<int>());
+    }
 
-    msg.mission_id =
-      j.value("missionId", "");
+    if (v.is_string())
+    {
+      const std::string s = v.get<std::string>();
 
-    msg.interceptor_id =
-      j.value("interceptorId", "");
+      if (s == "AssignTarget")       return cuas_msgs::msg::C2Command::ASSIGN_TARGET;
+      if (s == "PrepareIntercept")   return cuas_msgs::msg::C2Command::PREPARE_INTERCEPT;
+      if (s == "AuthorizeLaunch")    return cuas_msgs::msg::C2Command::AUTHORIZE_LAUNCH;
+      if (s == "StartIntercept")     return cuas_msgs::msg::C2Command::START_INTERCEPT;
+      if (s == "UpdateTarget")       return cuas_msgs::msg::C2Command::UPDATE_TARGET;
+      if (s == "UpdateMission")      return cuas_msgs::msg::C2Command::UPDATE_MISSION;
+      if (s == "Hold")               return cuas_msgs::msg::C2Command::HOLD;
+      if (s == "Abort")              return cuas_msgs::msg::C2Command::ABORT;
+      if (s == "ReturnHome")         return cuas_msgs::msg::C2Command::RETURN_HOME;
+      if (s == "Land")               return cuas_msgs::msg::C2Command::LAND;
+    }
 
-    msg.target_id =
-      j.value("targetId", "");
-
-    msg.reason =
-      j.value("reason", "");
-
-    // -------------------------------------------------------
-    // uint8
-    // -------------------------------------------------------
-
-    msg.command_type =
-      static_cast<uint8_t>(
-        j.value("commandType", 0));
+    return 0;
   }
 
-  // =========================================================
-  // ROS2 -> JSON
-  // =========================================================
-
-  inline void to_json(json& j,const cuas_msgs::msg::C2Command& msg)
+  inline void from_json(
+    const json& j,
+    cuas_msgs::msg::C2Command& msg)
   {
-    j =
+    if (j.contains("stamp") && j["stamp"].is_object())
     {
-      {
-        "stamp",
-        {
-          {"sec", msg.stamp.sec},
-          {"nanosec", msg.stamp.nanosec}
-        }
-      },
+      msg.stamp.sec = j["stamp"].value("sec", 0);
+      msg.stamp.nanosec = j["stamp"].value("nanosec", 0u);
+    }
 
-      {"commandId", msg.command_id},
-      {"missionId", msg.mission_id},
-      {"interceptorId", msg.interceptor_id},
-      {"targetId", msg.target_id},
+    msg.command_id = j.value("commandId", "");
+    msg.mission_id = j.value("missionId", "");
+    msg.interceptor_id = j.value("interceptorId", "");
+    msg.target_id = j.value("targetId", "");
 
-      {"commandType", msg.command_type},
+    msg.command_type = ParseCommandType(j);
 
-      {"reason", msg.reason}
-    };
+    msg.reason = j.value("reason", "");
   }
 }
+
 
 namespace engagement_result_json
 {

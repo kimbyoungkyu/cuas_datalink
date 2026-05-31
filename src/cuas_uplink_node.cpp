@@ -7,15 +7,15 @@
 #include <nats/nats.h>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
-#include "cuas_datalink/qos_profiles.hpp"
-#include "cuas_datalink/topic_names.hpp"
-#include "cuas_datalink/jsonConverters.hpp"
+#include "qos_profiles.hpp"
+#include "topic_names.hpp"
+#include "jsonConverters.hpp"
 
 //C2 -> Interceptor Command, Mission Assignment, Target Track
-class C2CommandNode : public rclcpp::Node
+class CUASUpLinkNode : public rclcpp::Node
 {
 public:
-  C2CommandNode()  : Node("c2_command_node")
+  CUASUpLinkNode()  : Node("cuas_uplink")
   {
     c2_command_pub_ = this->create_publisher<cuas_msgs::msg::C2Command>("/cuas/c2/command",cuas_datalink::ReliableControlQoS());
     intercept_mission_pub_ = this->create_publisher<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",cuas_datalink::ReliableControlQoS());
@@ -25,7 +25,7 @@ public:
     RCLCPP_INFO(this->get_logger(), "CUAS Uplink Started");
   }
 
-  ~C2CommandNode()
+  ~CUASUpLinkNode()
   {
     running_ = false;
     for (auto * sub : subscriptions_) {
@@ -64,16 +64,16 @@ private:
 
   void SubscribeNats()
   {
-    Subscribe("cuas.c2.command", &C2CommandNode::HandleC2Command);
-    Subscribe("cuas.c2.mission", &C2CommandNode::HandleInterceptMission);
-    Subscribe("cuas.c2.target_track", &C2CommandNode::HandleTargetTrack);
+    Subscribe("cuas.c2.command", &CUASUpLinkNode::HandleC2Command);
+    Subscribe("cuas.c2.mission", &CUASUpLinkNode::HandleInterceptMission);
+    Subscribe("cuas.c2.target_track", &CUASUpLinkNode::HandleTargetTrack);
   }
 
-  using HandlerFunc = void (C2CommandNode::*)(const std::string& data,const std::string& reply);
+  using HandlerFunc = void (CUASUpLinkNode::*)(const std::string& data,const std::string& reply);
 
   struct CallbackContext
   {
-    C2CommandNode * self;
+    CUASUpLinkNode * self;
     HandlerFunc handler;
   };
 
@@ -202,7 +202,7 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<C2CommandNode>());
+  rclcpp::spin(std::make_shared<CUASUpLinkNode>());
   rclcpp::shutdown();
   return 0;
 }

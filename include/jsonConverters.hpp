@@ -1,8 +1,8 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include "cuas_datalink/qos_profiles.hpp"
-#include "cuas_datalink/topic_names.hpp"
+#include "qos_profiles.hpp"
+#include "topic_names.hpp"
 #include "cuas_msgs/msg/c2_command.hpp"
 #include "cuas_msgs/msg/engagement_result.hpp"
 #include "cuas_msgs/msg/fault_report.hpp"

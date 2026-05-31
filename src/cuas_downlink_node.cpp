@@ -5,13 +5,13 @@
 #include <nats/nats.h>
 #include <rclcpp/rclcpp.hpp>
 #include <nlohmann/json.hpp>
-#include "cuas_datalink/qos_profiles.hpp"
-#include "cuas_datalink/topic_names.hpp"
-#include "cuas_datalink/jsonConverters.hpp"
+#include "qos_profiles.hpp"
+#include "topic_names.hpp"
+#include "jsonConverters.hpp"
 
-class InterceptorReportNode : public rclcpp::Node {
+class CUASDonwLink : public rclcpp::Node {
 public:
-  InterceptorReportNode() : Node("cuas_downlink")
+  CUASDonwLink() : Node("cuas_downlink")
   {
     ConnectNats();
 
@@ -20,7 +20,7 @@ public:
         "/cuas/interceptor/status",
         cuas_datalink::ReliableControlQoS(),
         std::bind(
-          &InterceptorReportNode::OnInterceptorStatus,
+          &CUASDonwLink::OnInterceptorStatus,
           this,
           std::placeholders::_1));
 
@@ -29,7 +29,7 @@ public:
         "/cuas/interceptor/progress",
         cuas_datalink::ReliableControlQoS(),
         std::bind(
-          &InterceptorReportNode::OnInterceptProgress,
+          &CUASDonwLink::OnInterceptProgress,
           this,
           std::placeholders::_1));
 
@@ -39,7 +39,7 @@ public:
         "/cuas/interceptor/ack",
         cuas_datalink::ReliableControlQoS(),
         std::bind(
-          &InterceptorReportNode::OnMissionAck,
+          &CUASDonwLink::OnMissionAck,
           this,
           std::placeholders::_1));
 
@@ -47,14 +47,14 @@ public:
     engagement_result_sub_ = this->create_subscription<cuas_msgs::msg::EngagementResult>(
         "/cuas/interceptor/result",
         cuas_datalink::ReliableControlQoS(),
-        std::bind(&InterceptorReportNode::OnEngagementResult,this,std::placeholders::_1));
+        std::bind(&CUASDonwLink::OnEngagementResult,this,std::placeholders::_1));
 
     fault_report_sub_ =
       this->create_subscription<cuas_msgs::msg::FaultReport>(
         "/cuas/interceptor/fault",
         cuas_datalink::ReliableControlQoS(),
         std::bind(
-          &InterceptorReportNode::OnFaultReport,
+          &CUASDonwLink::OnFaultReport,
           this,
           std::placeholders::_1));
 
@@ -64,7 +64,7 @@ public:
     RCLCPP_INFO(this->get_logger(), "CUAS Downlink Started");
   }
 
-  ~InterceptorReportNode()
+  ~CUASDonwLink()
   {
     running_ = false;
 
@@ -172,7 +172,7 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::executors::MultiThreadedExecutor executor;
-  auto node = std::make_shared<InterceptorReportNode>();
+  auto node = std::make_shared<CUASDonwLink>();
   executor.add_node(node);
   executor.spin();
   rclcpp::shutdown();

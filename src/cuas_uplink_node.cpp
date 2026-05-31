@@ -15,7 +15,7 @@
 class C2CommandNode : public rclcpp::Node
 {
 public:
-  C2CommandNode()  : Node("cuas_uplink")
+  C2CommandNode()  : Node("c2_command_node")
   {
     c2_command_pub_ = this->create_publisher<cuas_msgs::msg::C2Command>("/cuas/c2/command",cuas_datalink::ReliableControlQoS());
     intercept_mission_pub_ = this->create_publisher<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",cuas_datalink::ReliableControlQoS());
@@ -202,10 +202,7 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-
   rclcpp::spin(std::make_shared<C2CommandNode>());
-
   rclcpp::shutdown();
-
   return 0;
 }

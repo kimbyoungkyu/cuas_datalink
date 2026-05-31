@@ -11,6 +11,10 @@
 #include "cuas_msgs/msg/intercept_progress.hpp"
 #include "cuas_msgs/msg/mission_ack.hpp"
 #include "cuas_msgs/msg/target_track.hpp"
+#include "cuas_msgs/msg/interceptor_heartbeat.hpp"
+#include "cuas_msgs/msg/geo_position.hpp"
+#include "cuas_msgs/msg/velocity_ned.hpp"
+
 using json = nlohmann::json;
 
 namespace c2_command_json
@@ -634,7 +638,7 @@ namespace interceptor_report
     };
   }
 
-  inline json EngagementResultToJson(
+  inline json ToJson(
     const cuas_msgs::msg::EngagementResult::SharedPtr& msg)
   {
     return {
@@ -654,7 +658,7 @@ namespace interceptor_report
     };
   }
 
-  inline json FaultReportToJson(
+  inline json ToJson(
     const cuas_msgs::msg::FaultReport::SharedPtr& msg)
   {
     return {
@@ -674,7 +678,7 @@ namespace interceptor_report
     };
   }
 
-  inline json InterceptorStatusToJson(
+  inline json ToJson(
     const cuas_msgs::msg::InterceptorStatus::SharedPtr& msg)
   {
     return {
@@ -702,7 +706,7 @@ namespace interceptor_report
     };
   }
 
-  inline json InterceptorMissionStatusToJson(
+  inline json ToJson(
     const cuas_msgs::msg::InterceptProgress::SharedPtr& msg)
   {
     return {
@@ -723,7 +727,7 @@ namespace interceptor_report
     };
   }
 
-  inline json IntercepterMissionAckToJson(
+  inline json ToJson(
     const cuas_msgs::msg::MissionAck::SharedPtr& msg)
   {
     return {
@@ -742,6 +746,63 @@ namespace interceptor_report
   }
 }
 
+
+
+namespace interceptor_heartbeat
+{
+inline json GeoPositionToJson(
+    const cuas_msgs::msg::GeoPosition & msg)
+{
+    return {
+        {"latitude", msg.latitude},
+        {"longitude", msg.longitude},
+        {"altitude", msg.altitude}
+    };
+}
+
+inline json VelocityNEDToJson(
+    const cuas_msgs::msg::VelocityNED & msg)
+{
+    return {
+        {"north", msg.north},
+        {"east", msg.east},
+        {"down", msg.down}
+    };
+}
+
+inline json ToJson(
+    const cuas_msgs::msg::InterceptorHeartbeat::SharedPtr msg)
+{
+    json j;
+
+    j["stamp"] = {
+        {"sec", msg->stamp.sec},
+        {"nanosec", msg->stamp.nanosec}
+    };
+
+    j["interceptor_id"] = msg->interceptor_id;
+    j["mavlink_sys_id"] = msg->mavlink_sys_id;
+
+    j["status"] = msg->status;
+    j["mode"] = msg->mode;
+
+    j["armed"] = msg->armed;
+    j["connected"] = msg->connected;
+    j["offboard_available"] = msg->offboard_available;
+
+    j["battery_percent"] = msg->battery_percent;
+    j["battery_voltage"] = msg->battery_voltage;
+
+    j["position"] = GeoPositionToJson(msg->position);
+    j["velocity"] = VelocityNEDToJson(msg->velocity);
+
+    j["mission_id"] = msg->mission_id;
+    j["target_id"] = msg->target_id;
+    j["message"] = msg->message;
+
+    return j;
+}
+}
 
 
 

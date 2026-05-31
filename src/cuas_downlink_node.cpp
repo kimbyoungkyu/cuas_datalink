@@ -11,7 +11,7 @@
 
 class InterceptorReportNode : public rclcpp::Node {
 public:
-  InterceptorReportNode() : Node("interceptor_report_node")
+  InterceptorReportNode() : Node("cuas_downlink")
   {
     ConnectNats();
 
@@ -61,7 +61,7 @@ public:
 
 
 
-    RCLCPP_INFO(this->get_logger(), "interceptor_report_node started");
+    RCLCPP_INFO(this->get_logger(), "CUAS Downlink Started");
   }
 
   ~InterceptorReportNode()

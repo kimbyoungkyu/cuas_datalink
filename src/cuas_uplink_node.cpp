@@ -15,14 +15,14 @@
 class C2CommandNode : public rclcpp::Node
 {
 public:
-  C2CommandNode()  : Node("c2_command_node")
+  C2CommandNode()  : Node("cuas_uplink")
   {
     c2_command_pub_ = this->create_publisher<cuas_msgs::msg::C2Command>("/cuas/c2/command",cuas_datalink::ReliableControlQoS());
     intercept_mission_pub_ = this->create_publisher<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",cuas_datalink::ReliableControlQoS());
     target_track_pub_ = this->create_publisher<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",cuas_datalink::ReliableControlQoS());
     ConnectNats();
     SubscribeNats();
-    RCLCPP_INFO(this->get_logger(), "c2_command_node started");
+    RCLCPP_INFO(this->get_logger(), "CUAS Uplink Started");
   }
 
   ~C2CommandNode()
@@ -194,20 +194,9 @@ private:
 
   std::atomic_bool running_;
 
-  // =========================================================
-  // ROS2
-  // =========================================================
-
-
   rclcpp::Publisher<cuas_msgs::msg::C2Command>::SharedPtr c2_command_pub_;
   rclcpp::Publisher<cuas_msgs::msg::InterceptMission>::SharedPtr intercept_mission_pub_;
   rclcpp::Publisher<cuas_msgs::msg::TargetTrack>::SharedPtr target_track_pub_;
-
-  //rclcpp::TimerBase::SharedPtr timer_;
-
-  //int publish_period_ms_;
-
-
 };
 
 int main(int argc, char ** argv)

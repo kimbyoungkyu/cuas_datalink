@@ -64,25 +64,25 @@ message(STATUS "NATS library: ${NATS_LIBRARY}")
 # c2_command_node
 # =========================================================
 
-add_executable(c2_command_node
-  src/c2_command_node.cpp
+add_executable(cuas_uplink_node
+  src/cuas_uplink_node.cpp
 )
 
-ament_target_dependencies(c2_command_node
+ament_target_dependencies(cuas_uplink_node
   ${COMMON_DEPENDENCIES}
 )
 
-target_include_directories(c2_command_node
+target_include_directories(cuas_uplink_node
   PRIVATE
     ${NATS_INCLUDE_DIR}
 )
 
-target_link_libraries(c2_command_node
+target_link_libraries(cuas_uplink_node
   ${NATS_LIBRARY}
   nlohmann_json::nlohmann_json
 )
 
-target_compile_definitions(c2_command_node
+target_compile_definitions(cuas_uplink_node
   PRIVATE
     CUAS_DATALINK_HAS_NATS=1
 )
@@ -91,25 +91,25 @@ target_compile_definitions(c2_command_node
 # interceptor_report_node
 # =========================================================
 
-add_executable(interceptor_report_node
-  src/interceptor_report_node.cpp
+add_executable(cuas_downlink_node
+  src/cuas_downlink_node.cpp
 )
 
-ament_target_dependencies(interceptor_report_node
+ament_target_dependencies(cuas_downlink_node
   ${COMMON_DEPENDENCIES}
 )
 
-target_include_directories(interceptor_report_node
+target_include_directories(cuas_downlink_node
   PRIVATE
     ${NATS_INCLUDE_DIR}
 )
 
-target_link_libraries(interceptor_report_node
+target_link_libraries(cuas_downlink_node
   ${NATS_LIBRARY}
   nlohmann_json::nlohmann_json
 )
 
-target_compile_definitions(interceptor_report_node
+target_compile_definitions(cuas_downlink_node
   PRIVATE
     CUAS_DATALINK_HAS_NATS=1
 )
@@ -119,8 +119,8 @@ target_compile_definitions(interceptor_report_node
 # =========================================================
 
 install(TARGETS
-  c2_command_node
-  interceptor_report_node
+  cuas_uplink_node
+  cuas_downlink_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

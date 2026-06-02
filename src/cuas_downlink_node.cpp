@@ -54,12 +54,12 @@ public:
           std::placeholders::_1));
 
 
-    interceptor_heartbeat_sub_ =
-      this->create_subscription<cuas_msgs::msg::InterceptorHeartbeat>(
-        "/cuas/interceptor/heartbeat",
+    interceptor_snapshot_sub_ =
+      this->create_subscription<cuas_msgs::msg::InterceptorSnapshot>(
+        "/cuas/interceptor/snapshot",
         cuas_datalink::ReliableControlQoS(),
         std::bind(
-          &CUASDonwLink::OnInterceptorHeartbeat,
+          &CUASDonwLink::OnInterceptorSnapshot,
           this,
           std::placeholders::_1));
 
@@ -163,14 +163,14 @@ private:
 
   //cuas.interceptor.fault
 
-  void OnInterceptorHeartbeat(const cuas_msgs::msg::InterceptorHeartbeat::SharedPtr msg)
+  void OnInterceptorSnapshot(const cuas_msgs::msg::InterceptorSnapshot::SharedPtr msg)
   {
     (void)msg;
-    RCLCPP_INFO(this->get_logger(), "OnInterceptorHeartbeat");
-    json j = interceptor_heartbeat::ToJson(msg);
+    RCLCPP_INFO(this->get_logger(), "OnInterceptorSnapshot");
+    json j = interceptor_snapshot::ToJson(msg);
     std::string json_string = j.dump(4);
     RCLCPP_INFO(this->get_logger(), json_string.c_str());
-    PublishNatsJson("cuas.interceptor.heartbeat", json_string);
+    PublishNatsJson("cuas.interceptor.snapshot", json_string);
   }
 
 
@@ -185,7 +185,7 @@ private:
   rclcpp::Subscription<cuas_msgs::msg::InterceptorStatus>::SharedPtr interceptor_status_sub_;
   rclcpp::Subscription<cuas_msgs::msg::InterceptProgress>::SharedPtr intercept_progress_sub_;
   rclcpp::Subscription<cuas_msgs::msg::MissionAck>::SharedPtr mission_ack_sub_;
-  rclcpp::Subscription<cuas_msgs::msg::InterceptorHeartbeat>::SharedPtr interceptor_heartbeat_sub_;
+  rclcpp::Subscription<cuas_msgs::msg::InterceptorSnapshot>::SharedPtr interceptor_snapshot_sub_;
 };
 
 int main(int argc, char ** argv)

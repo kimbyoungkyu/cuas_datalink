@@ -12,6 +12,7 @@
 #include "cuas_msgs/msg/mission_ack.hpp"
 #include "cuas_msgs/msg/target_track.hpp"
 #include "cuas_msgs/msg/interceptor_heartbeat.hpp"
+#include "cuas_msgs/msg/interceptor_snapshot.hpp"
 #include "cuas_msgs/msg/geo_position.hpp"
 #include "cuas_msgs/msg/velocity_ned.hpp"
 
@@ -38,15 +39,15 @@ namespace c2_command_json
       const std::string s = v.get<std::string>();
 
       if (s == "AssignTarget")       return cuas_msgs::msg::C2Command::ASSIGN_TARGET;
-      if (s == "PrepareIntercept")   return cuas_msgs::msg::C2Command::PREPARE_INTERCEPT;
-      if (s == "AuthorizeLaunch")    return cuas_msgs::msg::C2Command::AUTHORIZE_LAUNCH;
+      //if (s == "PrepareIntercept")   return cuas_msgs::msg::C2Command::PREPARE_INTERCEPT;
+      //if (s == "AuthorizeLaunch")    return cuas_msgs::msg::C2Command::AUTHORIZE_LAUNCH;
       if (s == "StartIntercept")     return cuas_msgs::msg::C2Command::START_INTERCEPT;
-      if (s == "UpdateTarget")       return cuas_msgs::msg::C2Command::UPDATE_TARGET;
-      if (s == "UpdateMission")      return cuas_msgs::msg::C2Command::UPDATE_MISSION;
-      if (s == "Hold")               return cuas_msgs::msg::C2Command::HOLD;
+      //if (s == "UpdateTarget")       return cuas_msgs::msg::C2Command::UPDATE_TARGET;
+      //if (s == "UpdateMission")      return cuas_msgs::msg::C2Command::UPDATE_MISSION;
+      //if (s == "Hold")               return cuas_msgs::msg::C2Command::HOLD;
       if (s == "Abort")              return cuas_msgs::msg::C2Command::ABORT;
-      if (s == "ReturnHome")         return cuas_msgs::msg::C2Command::RETURN_HOME;
-      if (s == "Land")               return cuas_msgs::msg::C2Command::LAND;
+      //if (s == "ReturnHome")         return cuas_msgs::msg::C2Command::RETURN_HOME;
+      //if (s == "Land")               return cuas_msgs::msg::C2Command::LAND;
     }
 
     return 0;
@@ -106,15 +107,15 @@ namespace intercept_mission_json
       const std::string s = v.get<std::string>();
 
       if (s == "AssignTarget") return cuas_msgs::msg::C2Command::ASSIGN_TARGET;
-      if (s == "PrepareIntercept") return cuas_msgs::msg::C2Command::PREPARE_INTERCEPT;
-      if (s == "AuthorizeLaunch") return cuas_msgs::msg::C2Command::AUTHORIZE_LAUNCH;
+      //if (s == "PrepareIntercept") return cuas_msgs::msg::C2Command::PREPARE_INTERCEPT;
+      //if (s == "AuthorizeLaunch") return cuas_msgs::msg::C2Command::AUTHORIZE_LAUNCH;
       if (s == "StartIntercept") return cuas_msgs::msg::C2Command::START_INTERCEPT;
-      if (s == "UpdateTarget") return cuas_msgs::msg::C2Command::UPDATE_TARGET;
-      if (s == "UpdateMission") return cuas_msgs::msg::C2Command::UPDATE_MISSION;
-      if (s == "Hold") return cuas_msgs::msg::C2Command::HOLD;
+      //if (s == "UpdateTarget") return cuas_msgs::msg::C2Command::UPDATE_TARGET;
+      //if (s == "UpdateMission") return cuas_msgs::msg::C2Command::UPDATE_MISSION;
+      //if (s == "Hold") return cuas_msgs::msg::C2Command::HOLD;
       if (s == "Abort") return cuas_msgs::msg::C2Command::ABORT;
-      if (s == "ReturnHome") return cuas_msgs::msg::C2Command::RETURN_HOME;
-      if (s == "Land") return cuas_msgs::msg::C2Command::LAND;
+      //if (s == "ReturnHome") return cuas_msgs::msg::C2Command::RETURN_HOME;
+      //if (s == "Land") return cuas_msgs::msg::C2Command::LAND;
     }
 
     return 0;
@@ -746,11 +747,9 @@ namespace interceptor_report
   }
 }
 
-
-
 namespace interceptor_heartbeat
 {
-inline json GeoPositionToJson(
+inline json geoPositionToJson(
     const cuas_msgs::msg::GeoPosition & msg)
 {
     return {
@@ -760,7 +759,7 @@ inline json GeoPositionToJson(
     };
 }
 
-inline json VelocityNEDToJson(
+inline json velocityNEDToJson(
     const cuas_msgs::msg::VelocityNED & msg)
 {
     return {
@@ -780,30 +779,87 @@ inline json ToJson(
         {"nanosec", msg->stamp.nanosec}
     };
 
-    j["interceptor_id"] = msg->interceptor_id;
-    j["mavlink_sys_id"] = msg->mavlink_sys_id;
+    j["interceptorId"] = msg->interceptor_id;
+    j["mavlinkSysId"] = msg->mavlink_sys_id;
 
     j["status"] = msg->status;
     j["mode"] = msg->mode;
 
     j["armed"] = msg->armed;
     j["connected"] = msg->connected;
-    j["offboard_available"] = msg->offboard_available;
+    j["offboardAvailable"] = msg->offboard_available;
 
-    j["battery_percent"] = msg->battery_percent;
-    j["battery_voltage"] = msg->battery_voltage;
+    j["batteryPercent"] = msg->battery_percent;
+    j["batteryVoltage"] = msg->battery_voltage;
 
-    j["position"] = GeoPositionToJson(msg->position);
-    j["velocity"] = VelocityNEDToJson(msg->velocity);
+    j["position"] = geoPositionToJson(msg->position);
+    j["velocity"] = velocityNEDToJson(msg->velocity);
 
-    j["mission_id"] = msg->mission_id;
-    j["target_id"] = msg->target_id;
+    j["missionId"] = msg->mission_id;
+    j["targetId"] = msg->target_id;
     j["message"] = msg->message;
 
     return j;
 }
 }
 
+
+
+namespace interceptor_snapshot
+{
+inline json geoPositionToJson(
+    const cuas_msgs::msg::GeoPosition & msg)
+{
+    return {
+        {"latitude", msg.latitude},
+        {"longitude", msg.longitude},
+        {"altitude", msg.altitude}
+    };
+}
+
+inline json velocityNEDToJson(
+    const cuas_msgs::msg::VelocityNED & msg)
+{
+    return {
+        {"north", msg.north},
+        {"east", msg.east},
+        {"down", msg.down}
+    };
+}
+
+inline json ToJson(
+    const cuas_msgs::msg::InterceptorSnapshot::SharedPtr msg)
+{
+    json j;
+
+    j["stamp"] = {
+        {"sec", msg->stamp.sec},
+        {"nanosec", msg->stamp.nanosec}
+    };
+
+    j["interceptorId"] = msg->interceptor_id;
+    j["mavlinkSysId"] = msg->mavlink_sys_id;
+
+    j["status"] = msg->status;
+    j["mode"] = msg->mode;
+
+    j["armed"] = msg->armed;
+    j["connected"] = msg->connected;
+    j["offboardAvailable"] = msg->offboard_available;
+
+    j["batteryPercent"] = msg->battery_percent;
+    j["batteryVoltage"] = msg->battery_voltage;
+
+    j["position"] = geoPositionToJson(msg->position);
+    j["velocity"] = velocityNEDToJson(msg->velocity);
+
+    j["missionId"] = msg->mission_id;
+    j["targetId"] = msg->target_id;
+    j["message"] = msg->message;
+
+    return j;
+}
+}
 
 
 

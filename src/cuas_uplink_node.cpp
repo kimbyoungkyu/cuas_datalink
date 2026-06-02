@@ -18,7 +18,7 @@ public:
   CUASUpLinkNode()  : Node("cuas_uplink")
   {
     c2_command_pub_ = this->create_publisher<cuas_msgs::msg::C2Command>("/cuas/c2/command",cuas_datalink::ReliableControlQoS());
-    intercept_mission_pub_ = this->create_publisher<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",cuas_datalink::ReliableControlQoS());
+    //intercept_mission_pub_ = this->create_publisher<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",cuas_datalink::ReliableControlQoS());
     target_track_pub_ = this->create_publisher<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",cuas_datalink::ReliableControlQoS());
     ConnectNats();
     SubscribeNats();
@@ -65,7 +65,7 @@ private:
   void SubscribeNats()
   {
     Subscribe("cuas.c2.command", &CUASUpLinkNode::HandleC2Command);
-    Subscribe("cuas.c2.mission", &CUASUpLinkNode::HandleInterceptMission);
+//    Subscribe("cuas.c2.mission", &CUASUpLinkNode::HandleInterceptMission);
     Subscribe("cuas.c2.target_track", &CUASUpLinkNode::HandleTargetTrack);
   }
 
@@ -133,6 +133,8 @@ private:
     
     
     auto c2_command_msg = cuas_msgs::msg::C2Command();
+
+    
     c2_command_json::from_json(json::parse(data), c2_command_msg);
     c2_command_pub_->publish(c2_command_msg);
 
@@ -144,13 +146,15 @@ private:
     }
   }
 
+
+  /*
   void HandleInterceptMission(const std::string& data,const std::string& reply)
   {
     RCLCPP_INFO(this->get_logger(),"[cuas.c2.mission] %s",data.c_str());
     auto intercept_mission_msg = cuas_msgs::msg::InterceptMission();
 
     intercept_mission_json::FromJson(json::parse(data), intercept_mission_msg);
-    intercept_mission_pub_->publish(intercept_mission_msg);
+    //intercept_mission_pub_->publish(intercept_mission_msg);
 
     // TODO:
     // FCUASMissionAssignment Parse
@@ -159,6 +163,7 @@ private:
       natsConnection_PublishString(conn_,reply.c_str(),response.c_str());
     }
   }
+  */
 
   void HandleTargetTrack(const std::string& data,const std::string& reply)
   {
@@ -195,7 +200,7 @@ private:
   std::atomic_bool running_;
 
   rclcpp::Publisher<cuas_msgs::msg::C2Command>::SharedPtr c2_command_pub_;
-  rclcpp::Publisher<cuas_msgs::msg::InterceptMission>::SharedPtr intercept_mission_pub_;
+  //rclcpp::Publisher<cuas_msgs::msg::InterceptMission>::SharedPtr intercept_mission_pub_;
   rclcpp::Publisher<cuas_msgs::msg::TargetTrack>::SharedPtr target_track_pub_;
 };
 

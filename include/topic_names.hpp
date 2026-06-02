@@ -89,6 +89,10 @@ constexpr const char * ENGAGEMENT_RESULT =
 constexpr const char * FAULT_REPORT =
   "cuas.interceptor.fault";
 
+//constexpr const char * FAULT_REPORT =
+  //"cuas.interceptor.fault";
+
+
 // =========================================================
 // Common
 // =========================================================

@@ -14,14 +14,19 @@ public:
   CUASDonwLink() : Node("cuas_downlink")
   {
     ConnectNats();
+
+    /*
     interceptor_status_sub_ = this->create_subscription<cuas_msgs::msg::InterceptorStatus>(
           "/cuas/interceptor/status",
           cuas_datalink::ReliableControlQoS(),
           std::bind(&CUASDonwLink::OnInterceptorStatus,
             this,
           std::placeholders::_1));
+          */
 
-    intercept_progress_sub_ =
+    
+    /*
+          intercept_progress_sub_ =
       this->create_subscription<cuas_msgs::msg::InterceptProgress>(
         "/cuas/interceptor/progress",
         cuas_datalink::ReliableControlQoS(),
@@ -29,6 +34,7 @@ public:
           &CUASDonwLink::OnInterceptProgress,
           this,
           std::placeholders::_1));
+          */
 
     mission_ack_sub_ =
       this->create_subscription<cuas_msgs::msg::MissionAck>(
@@ -108,9 +114,6 @@ private:
       RCLCPP_ERROR(this->get_logger(),"NATS publish failed: subject=%s error=%s",subject.c_str(),natsStatus_GetText(status));
     }
   }
-
-
-
   void OnEngagementResult(const cuas_msgs::msg::EngagementResult::SharedPtr msg)
   {
     RCLCPP_INFO(this->get_logger(), "OnEngagementResult");
@@ -119,7 +122,6 @@ private:
     RCLCPP_INFO(this->get_logger(), json_string.c_str());
     PublishNatsJson(cuas_datalink::nats_subjects::ENGAGEMENT_RESULT, json_string);
   }
-
   
   void OnFaultReport(const cuas_msgs::msg::FaultReport::SharedPtr msg)
   {
@@ -130,26 +132,7 @@ private:
     RCLCPP_INFO(this->get_logger(), json_string.c_str());
     PublishNatsJson(cuas_datalink::nats_subjects::FAULT_REPORT, json_string);
   }
-  void OnInterceptorStatus(const cuas_msgs::msg::InterceptorStatus::SharedPtr msg)
-  {
-    (void)msg;
-    RCLCPP_INFO(this->get_logger(), "OnInterceptorStatus");
-    json j = interceptor_report::ToJson(msg);
-    std::string json_string = j.dump(4);
-    RCLCPP_INFO(this->get_logger(), json_string.c_str());
-    PublishNatsJson(cuas_datalink::nats_subjects::INTERCEPTOR_STATUS, json_string);
-  }
-  void OnInterceptProgress(const cuas_msgs::msg::InterceptProgress::SharedPtr msg)
-  {
-    (void)msg;
-    RCLCPP_INFO(this->get_logger(), "OnInterceptProgress");
-    //std::string json = R"({"type":"intercept_progress"})";
 
-    json j = interceptor_report::ToJson(msg);
-    std::string json_string = j.dump(4);
-    RCLCPP_INFO(this->get_logger(), json_string.c_str());
-    PublishNatsJson(cuas_datalink::nats_subjects::INTERCEPT_PROGRESS, json_string);
-  }
   void OnMissionAck(const cuas_msgs::msg::MissionAck::SharedPtr msg)
   {
     (void)msg;
@@ -166,7 +149,7 @@ private:
   void OnInterceptorSnapshot(const cuas_msgs::msg::InterceptorSnapshot::SharedPtr msg)
   {
     (void)msg;
-    RCLCPP_INFO(this->get_logger(), "OnInterceptorSnapshot");
+    //RCLCPP_INFO(this->get_logger(), "OnInterceptorSnapshot");
     json j = interceptor_snapshot::ToJson(msg);
     std::string json_string = j.dump(4);
     RCLCPP_INFO(this->get_logger(), json_string.c_str());
@@ -181,9 +164,6 @@ private:
   std::atomic_bool running_{false};
   rclcpp::Subscription<cuas_msgs::msg::EngagementResult>::SharedPtr engagement_result_sub_;
   rclcpp::Subscription<cuas_msgs::msg::FaultReport>::SharedPtr fault_report_sub_;
-  rclcpp::Subscription<cuas_msgs::msg::InterceptMission>::SharedPtr interceptor_mission_sub_;
-  rclcpp::Subscription<cuas_msgs::msg::InterceptorStatus>::SharedPtr interceptor_status_sub_;
-  rclcpp::Subscription<cuas_msgs::msg::InterceptProgress>::SharedPtr intercept_progress_sub_;
   rclcpp::Subscription<cuas_msgs::msg::MissionAck>::SharedPtr mission_ack_sub_;
   rclcpp::Subscription<cuas_msgs::msg::InterceptorSnapshot>::SharedPtr interceptor_snapshot_sub_;
 };

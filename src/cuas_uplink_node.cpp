@@ -128,16 +128,11 @@ private:
 
   void HandleC2Command(const std::string& data,const std::string& reply)
   {
-    RCLCPP_INFO(this->get_logger(),"[cuas.c2.command] %s",data.c_str());
+    //RCLCPP_INFO(this->get_logger(),"[cuas.c2.command] %s",data.c_str());
     //json을 파싱해서 cuas_msgs::msg::C2Command 메시지로 변환하는 로직이 들어갈 자리
-    
-    
     auto c2_command_msg = cuas_msgs::msg::C2Command();
-
-    
     c2_command_json::from_json(json::parse(data), c2_command_msg);
     c2_command_pub_->publish(c2_command_msg);
-
     // TODO:
     // FCUASC2Command Parse
     if (!reply.empty()) {
@@ -146,38 +141,13 @@ private:
     }
   }
 
-
-  /*
-  void HandleInterceptMission(const std::string& data,const std::string& reply)
-  {
-    RCLCPP_INFO(this->get_logger(),"[cuas.c2.mission] %s",data.c_str());
-    auto intercept_mission_msg = cuas_msgs::msg::InterceptMission();
-
-    intercept_mission_json::FromJson(json::parse(data), intercept_mission_msg);
-    //intercept_mission_pub_->publish(intercept_mission_msg);
-
-    // TODO:
-    // FCUASMissionAssignment Parse
-    if (!reply.empty()) {
-      std::string response = R"({"result":"ok","type":"mission"})";
-      natsConnection_PublishString(conn_,reply.c_str(),response.c_str());
-    }
-  }
-  */
-
   void HandleTargetTrack(const std::string& data,const std::string& reply)
   {
-    RCLCPP_INFO(this->get_logger(),"[cuas.c2.target_track] %s",data.c_str());
+    //RCLCPP_INFO(this->get_logger(),"[cuas.c2.target_track] %s",data.c_str());
     //json을 파싱해서 cuas_msgs::msg::TargetTrack 메시지로 변환하는 로직이 들어갈 자리
     auto target_track_msg = cuas_msgs::msg::TargetTrack();
     target_track_json::from_json(json::parse(data), target_track_msg);
     target_track_pub_->publish(target_track_msg);
-    // FCUASTargetTrack Parse 
-    
-    if (!reply.empty()) {
-      std::string response = R"({"result":"ok","type":"target_track"})";
-      natsConnection_PublishString(conn_,reply.c_str(),response.c_str());
-    }
   }
 
 

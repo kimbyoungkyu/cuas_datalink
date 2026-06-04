@@ -65,7 +65,6 @@ private:
   void SubscribeNats()
   {
     Subscribe("cuas.c2.command", &CUASUpLinkNode::HandleC2Command);
-//    Subscribe("cuas.c2.mission", &CUASUpLinkNode::HandleInterceptMission);
     Subscribe("cuas.c2.target_track", &CUASUpLinkNode::HandleTargetTrack);
   }
 
@@ -135,10 +134,13 @@ private:
     c2_command_pub_->publish(c2_command_msg);
     // TODO:
     // FCUASC2Command Parse
+
+    /*
     if (!reply.empty()) {
       std::string response = R"({"result":"ok","type":"c2_command"})";
       natsConnection_PublishString(conn_,reply.c_str(),response.c_str());
     }
+      */
   }
 
   void HandleTargetTrack(const std::string& data,const std::string& reply)

@@ -46,6 +46,7 @@ namespace c2_command_json
       //if (s == "UpdateMission")      return cuas_msgs::msg::C2Command::UPDATE_MISSION;
       //if (s == "Hold")               return cuas_msgs::msg::C2Command::HOLD;
       if (s == "Abort")              return cuas_msgs::msg::C2Command::ABORT;
+      if (s == "Hit")              return cuas_msgs::msg::C2Command::HIT;
       //if (s == "ReturnHome")         return cuas_msgs::msg::C2Command::RETURN_HOME;
       //if (s == "Land")               return cuas_msgs::msg::C2Command::LAND;
     }
@@ -597,21 +598,21 @@ namespace interceptor_report
       default: return "Unknown";
     }
   }
-
+  //testtest
   inline std::string PhaseToString(uint8_t phase)
   {
     switch (phase)
     {
-      case 0: return "None";
-      case 1: return "Assigned";
-      case 2: return "Preparing";
-      case 3: return "Launched";
-      case 4: return "Midcourse";
-      case 5: return "CooperativeTracking";
-      case 6: return "TerminalApproachSim";
-      case 7: return "Completed";
-      case 8: return "Aborted";
-      case 9: return "Failed";
+      case 0: return "Initialize";
+      case 1: return "Idle";
+      case 2: return "Ready";
+      case 3: return "Launch";
+      case 4: return "C2Guidance";
+      case 5: return "TerminalGuidance";
+      case 6: return "Abort";
+//      case 7: return "Completed";
+      //case 8: return "Aborted";
+      //case 9: return "Failed";
       default: return "Unknown";
     }
   }
@@ -852,6 +853,10 @@ inline json ToJson(
 
     j["position"] = geoPositionToJson(msg->position);
     j["velocity"] = velocityNEDToJson(msg->velocity);
+
+    j["localX"] = msg->local_x;
+    j["localY"] = msg->local_y;
+    j["localZ"] = msg->local_z;
 
     j["missionId"] = msg->mission_id;
     j["targetId"] = msg->target_id;
